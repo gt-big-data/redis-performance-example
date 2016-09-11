@@ -9,6 +9,7 @@
 <p>Average Time: <span id="average_time"></span>ms/request</p>
 <script>
 (function () {
+  // Stateful variable handled by `initStats`, `updateStats`, and `renderStats`.
   var stats
 
   function sendRequest(cb) {
@@ -42,15 +43,14 @@
   function renderStats () {
     document.getElementById('total_requests').innerText = stats.totalRequests
     document.getElementById('total_time').innerText = stats.totalTime
-    document.getElementById('average_time').innerText = stats.averageTime
+    document.getElementById('average_time').innerText = stats.averageTime.toFixed(0)
   }
 
   function sendRequests () {
-    console.log('clicked')
     var count = document.getElementById('number_of_requests').value
-
     count = parseInt(count, 10)
 
+    // Clear stats before every test.
     initStats()
 
     // Send the requests in serial (wait for one to come back before sending the next).
