@@ -3,6 +3,7 @@
 <span>Send </span><input type="number" id="number_of_requests"><span> requests</span>
 <p></p> <!-- This is for padding. I know I'm a bad person. -->
 <button id="send_btn">Send!</button>
+<label><input type="checkbox" id="use_redis">Use Redis</label>
 <h2>Stats</h2>
 <p>Requests sent: <span id="total_requests"></span></p>
 <p>Total Time: <span id="total_time"></span>ms</p>
@@ -12,10 +13,11 @@
   // Stateful variable handled by `initStats`, `updateStats`, and `renderStats`.
   var stats
 
-  function sendRequest(cb) {
+  function sendRequest(useRedis, cb) {
     // https://developer.mozilla.org/en-US/docs/Web/API/Request/Request
     // Works in FF and Chrome
-    var req = new Request('/ping', {cache: 'no-cache'})
+    var url = useRedis ? '/do_later' : '/do_now'
+    var req = new Request(url, {cache: 'no-cache'})
     var startTime = new Date()
     fetch(req).then(function(response) {
       var endTime = new Date()
@@ -49,6 +51,7 @@
   function sendRequests () {
     var count = document.getElementById('number_of_requests').value
     count = parseInt(count, 10)
+    var useRedis = document.getElementById('use_redis').checked
 
     // Clear stats before every test.
     initStats()
@@ -58,10 +61,10 @@
       updateStats(response, startTime, endTime)
       count--
       if (count !== 0) {
-        sendRequest(cb)
+        sendRequest(useRedis, cb)
       }
     }
-    sendRequest(cb)
+    sendRequest(useRedis, cb)
   }
 
   document.getElementById('send_btn').addEventListener('click', sendRequests)

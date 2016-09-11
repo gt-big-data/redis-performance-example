@@ -1,17 +1,8 @@
-import os
-
 from flask import Flask, jsonify
 from redis import Redis
 from rq import Queue
 
 import work
-
-USE_REDIS = os.getenv('USE_REDIS')
-if USE_REDIS:
-    print('Queuing work with Redis')
-else:
-    print('Doing work immediately.')
-
 
 app = Flask(__name__)
 q = Queue(connection=Redis())
@@ -21,15 +12,17 @@ def main():
     # Flask default folder for static files is "/static"
     return app.send_static_file('index.html')
 
-@app.route('/ping')
-def ping():
-    if USE_REDIS:
-        q.enqueue(work.do_work)
-        return jsonify({'status': 'queued'})
-    else:
-        work.do_work()
-        return jsonify({'status': 'done'})
+@app.route('/do_now')
+def do_now():
+    work.do_work()
+    return jsonify({'status': 'done'})
+
+@app.route('/do_later')
+def do_later():
+    q.enqueue(work.do_work)
+    return jsonify({'status': 'queued'})
+
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')
