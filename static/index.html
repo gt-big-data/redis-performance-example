@@ -1,0 +1,71 @@
+<h1>Server tester</h1>
+
+<span>Send </span><input type="number" id="number_of_requests"><span> requests</span>
+<p></p> <!-- This is for padding. I know I'm a bad person. -->
+<button id="send_btn">Send!</button>
+<h2>Stats</h2>
+<p>Requests sent: <span id="total_requests"></span></p>
+<p>Total Time: <span id="total_time"></span>ms</p>
+<p>Average Time: <span id="average_time"></span>ms/request</p>
+<script>
+(function () {
+  var stats
+
+  function sendRequest(cb) {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Request/Request
+    // Works in FF and Chrome
+    var req = new Request('/ping', {cache: 'no-cache'})
+    var startTime = new Date()
+    fetch(req).then(function(response) {
+      var endTime = new Date()
+      cb(response.json(), startTime, endTime)
+    })
+  }
+
+  function initStats () {
+    stats = {
+      totalRequests: 0,
+      averageTime: 0,
+      totalTime: 0
+    }
+  }
+
+  function updateStats (response, startTime, endTime) {
+    var timeElapsed = endTime - startTime
+    stats.totalRequests++
+    stats.totalTime += timeElapsed
+    stats.averageTime = stats.totalTime / stats.totalRequests
+
+    renderStats()
+  }
+
+  function renderStats () {
+    document.getElementById('total_requests').innerText = stats.totalRequests
+    document.getElementById('total_time').innerText = stats.totalTime
+    document.getElementById('average_time').innerText = stats.averageTime
+  }
+
+  function sendRequests () {
+    console.log('clicked')
+    var count = document.getElementById('number_of_requests').value
+
+    count = parseInt(count, 10)
+
+    initStats()
+
+    // Send the requests in serial (wait for one to come back before sending the next).
+    function cb (response, startTime, endTime) {
+      updateStats(response, startTime, endTime)
+      count--
+      if (count !== 0) {
+        sendRequest(cb)
+      }
+    }
+    sendRequest(cb)
+  }
+
+  document.getElementById('send_btn').addEventListener('click', sendRequests)
+  initStats()
+  renderStats()
+})()
+</script>
